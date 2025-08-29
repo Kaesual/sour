@@ -1282,6 +1282,13 @@ int main(int argc, char **argv)
     {
         logoutf("init: sdl");
 
+#if __EMSCRIPTEN__
+        // Ensure keyboard events are captured when running inside iframes by
+        // attaching SDL's keyboard listeners to the iframe document.
+        // This must be set before SDL_Init.
+        SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#document");
+#endif
+
         if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO)<0) fatal("Unable to initialize SDL: %s", SDL_GetError());
 
 #ifdef SDL_VIDEO_DRIVER_X11
