@@ -4,13 +4,11 @@
     </a>
 </p>
 
-<p align="center">
-    <a href="https://discord.gg/WP3EbYym4M"><img src="https://img.shields.io/discord/1071091858576523274?color=5865F2&label=discord&style=flat-square" alt="Discord" /></a>
-    <a href="https://github.com/cfoust/sour/releases"><img src="https://img.shields.io/github/downloads/cfoust/sour/latest/total?style=flat-square" alt="sour releases" /></a>
-    <a href="https://github.com/cfoust/sour/blob/main/LICENSE"><img src="https://img.shields.io/github/license/cfoust/sour?color=48AC75&style=flat-square" alt="sour License Badge MIT" /></a>
-</p>
-
 ## What is this?
+
+This is a fork of the excellent [original sour repository](https://github.com/cfoust/sour) made by cfoust. It has been made with the goal to embed sauerbraten as an in-community game experience into the Common Ground platform. I want to enable a Quake-like experience, and add additional features like Tournaments between communities.
+
+
 
 Sour is a <a target="_blank" href="http://sauerbraten.org/">Cube 2: Sauerbraten</a> server that serves a fully-featured web-version of Sauerbraten (with support for mobile devices) in addition to accepting connections from the traditional, desktop version of the game. Sour is the easiest way to play Sauerbraten with your friends.
 
@@ -31,6 +29,24 @@ brew install cfoust/taps/sour@0.2.2
 ```
 
 In addition to all of the base game assets, these archives only contain three maps: `complex`, `dust2`, and `turbine`.
+
+### Prerequisite: Git LFS
+
+This repository stores large binary assets (textures, images, etc.) in Git LFS. After cloning, ensure LFS is installed and fetch objects, or some files will be tiny pointer stubs that fail at runtime.
+
+Brief setup:
+
+```bash
+# Ubuntu/Debian
+sudo apt install git-lfs
+
+# macOS (Homebrew)
+brew install git-lfs
+
+# One‑time init, then pull LFS content
+git lfs install
+git lfs pull
+```
 
 ## Running Sour
 
@@ -113,9 +129,21 @@ Here is a high level description of the repository's contents:
 - `client`: A React web application that uses the compiled Sauerbraten game found in `game`, pulls assets, and proxies all server communication over a WebSocket.
 - `assets`: Scripts for building web-compatible game assets. This is an extremely complicated topic and easily the most difficult aspect of shipping Sauerbraten to the web. Check out this [section's README](assets/README.md) for more information.
 
+**Updates in this fork**
+
+- dockerized the build pipeline for the game client as well as assets
+- uses one docker helper container that compiles everything and can also serve the game server
+- fixed a bug that prevented keyboard events to work in iframes
+
+
+
 ## Contributing
 
-Join us on [Discord](https://discord.gg/WP3EbYym4M) to chat with us and see how you can help out! Check out the [issues tab](https://github.com/cfoust/sour/issues) to get an idea of what needs doing.
+This repository is maintained by the Common Ground Team (I'm one of the founders) as an in-community gaming experience. Common Ground itself is a progressive web app and supports embedding custom games and plugins into Communities. If you're interested in the project, join our [Common Ground community on app.cg](https://app.cg/c/commonground/).
+
+Besides Sour / Sauerbraten, I also made a Luanti (think "open source minecraft") game plugin available on app.cg. Like Sour, it is also a web assembly game with an original c++ codebase. You can find my [minetest-wasm repository here](https://github.com/Kaesual/minetest-wasm). You can play both games right in your browser, in the [Video Games community on app.cg](https://app.cg/c/videogames/).
+
+The original repository was made by cfoust. You can join the community on [Discord](https://discord.gg/WP3EbYym4M) to chat with them and see how you can help out! Check out the [cfoust sour issues tab](https://github.com/cfoust/sour/issues) to get an idea of what needs doing.
 
 ## Inspiration
 

@@ -940,6 +940,7 @@ function App() {
           className="game"
           style={{ opacity: state.type !== GameStateType.Ready ? 0 : 1 }}
           id="canvas"
+          tabIndex={0}
           ref={(canvas) => {
             if (canvas != null) {
               // This is a bug in mobile Safari where Reader holds on to canvas refs
@@ -948,8 +949,19 @@ function App() {
               canvas._evaluatedForTextContent = true
               // @ts-ignore
               canvas._cachedElementBoundingRect = {}
+              // Ensure the canvas is focusable for keyboard events
+              // (SDL with Emscripten binds keyboard to the target element)
+              // eslint-disable-next-line no-param-reassign
+              canvas.tabIndex = 0
             }
             Module.canvas = canvas
+          }}
+          onMouseDown={(_e: React.MouseEvent<HTMLCanvasElement>) => {
+            // Focus the canvas so key events are delivered here
+            // (important when SDL binds to #canvas)
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            const el = document.getElementById('canvas') as HTMLCanvasElement | null
+            if (el) el.focus()
           }}
           onContextMenu={(event) => event.preventDefault()}
         ></canvas>

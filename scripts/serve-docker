@@ -5,11 +5,6 @@ set -euo pipefail
 IMAGE_TAG="sour-emscripten:3.1.8"
 PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
 
-# Build the image if missing
-if ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
-  docker build -f "$PROJECT_ROOT/docker/emscripten.Dockerfile" -t "$IMAGE_TAG" "$PROJECT_ROOT"
-fi
-
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 
@@ -26,6 +21,13 @@ if [ -f "$PROJECT_ROOT/assets/dist/.index.source" ]; then
   (cd "$PROJECT_ROOT/assets" && ln -sf "dist/.index.source" ".index.source")
 fi
 
+# Ensure the static site can serve required overlay assets (like downloading.png)
+SITE_DIR="$PROJECT_ROOT/pkg/server/static/site"
+if [ -d "$PROJECT_ROOT/assets/sour/packages" ]; then
+  mkdir -p "$SITE_DIR/packages"
+  cp -rf "$PROJECT_ROOT/assets/sour/packages/"* "$SITE_DIR/packages/" 2>/dev/null || true
+fi
+
 CMD="go run ./cmd/sour serve"
 if [ -n "$CONFIG_FILE" ]; then
   # Map host path to container path
@@ -38,10 +40,29 @@ else
   if [ -f "$PROJECT_ROOT/assets/.index.source" ]; then
     AUTO_CFG="$PROJECT_ROOT/dev.auto.yaml"
     cat > "$AUTO_CFG" <<EOF
-server:json
+server:
   cacheDirectory: "./.cache/assets"
   assets:
     - "fs:assets/dist/.index.source"
+  presets:
+    - name: "default"
+      default: true
+      config:
+        defaultMode: "ffa"
+        defaultMap: "complex"
+        maps: ["complex", "dust2", "turbine"]
+    - name: "insta"
+      config:
+        defaultMode: "insta"
+        defaultMap: "dust2"
+        maps: ["complex", "dust2", "turbine"]
+  spaces:
+    - preset: default
+      config:
+        alias: lobby
+    - preset: insta
+      config:
+        alias: insta
 client:
   assets:
     - "#origin/assets/0/.index.source"
@@ -51,8 +72,19 @@ EOF
   fi
 fi
 
-exec docker run \
+handle_signal() {
+  echo "SIGINT received, stopping container..."
+  docker stop sour-serve
+  exit 0
+}
+trap handle_signal SIGINT
+trap handle_signal SIGTERM
+
+trap 'docker rm -f sour-serve >/dev/null 2>&1 || true' INT TERM EXIT
+
+docker run \
   --rm \
+  --init \
   --user "$HOST_UID:$HOST_GID" \
   --name sour-serve \
   -e HOME="/workspace/.home" \
@@ -60,4 +92,7 @@ exec docker run \
   -v "$PROJECT_ROOT":/workspace \
   -w /workspace \
   "$IMAGE_TAG" \
-  bash -lc "$CMD"
+  bash -lc "$CMD" &
+
+PID=$!
+wait $PID

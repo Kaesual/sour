@@ -1,7 +1,26 @@
-server:json
+server:
   cacheDirectory: "./.cache/assets"
   assets:
     - "fs:assets/dist/.index.source"
+  presets:
+    - name: "default"
+      default: true
+      config:
+        defaultMode: "ffa"
+        defaultMap: "complex"
+        maps: ["complex", "dust2", "turbine"]
+    - name: "insta"
+      config:
+        defaultMode: "insta"
+        defaultMap: "dust2"
+        maps: ["complex", "dust2", "turbine"]
+  spaces:
+    - preset: default
+      config:
+        alias: lobby
+    - preset: insta
+      config:
+        alias: insta
 client:
   assets:
     - "#origin/assets/0/.index.source"

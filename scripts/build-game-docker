@@ -4,15 +4,7 @@ set -euo pipefail
 
 IMAGE_TAG="sour-emscripten:3.1.8"
 PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
-SCRIPTS_DIR="$PROJECT_ROOT/scripts"
 EM_CACHE_DIR="$PROJECT_ROOT/.emscripten-cache"
-
-build_image() {
-  docker build -f "$PROJECT_ROOT/docker/emscripten.Dockerfile" -t "$IMAGE_TAG" "$PROJECT_ROOT"
-}
-
-build_image
-
 
 # Allow overriding output dir
 GAME_OUTPUT_DIR=${GAME_OUTPUT_DIR:-dist/game}
@@ -48,11 +40,4 @@ exec docker run --rm \
     rm -rf /workspace/pkg/server/static/site
     mkdir -p /workspace/pkg/server/static/site
     cp -r dist/* /workspace/pkg/server/static/site/
-
-    echo "[4/4] Building assets..."
   '
-
-cd "$SCRIPTS_DIR"
-./build-assets-docker
-
-
