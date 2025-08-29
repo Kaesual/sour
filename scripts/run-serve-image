@@ -2,6 +2,18 @@
 
 set -euo pipefail
 
+CONTAINER_ENGINE=${CONTAINER_ENGINE:-}
+if [ -z "${CONTAINER_ENGINE}" ]; then
+  if command -v docker >/dev/null 2>&1; then
+    CONTAINER_ENGINE=docker
+  elif command -v podman >/dev/null 2>&1; then
+    CONTAINER_ENGINE=podman
+  else
+    echo "Neither docker nor podman found. Please install one or set CONTAINER_ENGINE."
+    exit 1
+  fi
+fi
+
 PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
 
 HOST_UID="$(id -u)"
@@ -14,13 +26,13 @@ CONFIG_FILE=${1:-}
 
 handle_signal() {
   echo "SIGINT received, stopping container..."
-  docker stop sour-serve
+  "$CONTAINER_ENGINE" stop sour-serve
   exit 0
 }
 trap handle_signal SIGINT
 trap handle_signal SIGTERM
 
-docker run \
+"$CONTAINER_ENGINE" run \
   --rm \
   --init \
   --name sour-serve \

@@ -2,12 +2,24 @@
 
 set -euo pipefail
 
+CONTAINER_ENGINE=${CONTAINER_ENGINE:-}
+if [ -z "${CONTAINER_ENGINE}" ]; then
+  if command -v docker >/dev/null 2>&1; then
+    CONTAINER_ENGINE=docker
+  elif command -v podman >/dev/null 2>&1; then
+    CONTAINER_ENGINE=podman
+  else
+    echo "Neither docker nor podman found. Please install one or set CONTAINER_ENGINE."
+    exit 1
+  fi
+fi
+
 IMAGE_TAG="sour-emscripten:3.1.8"
 PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
 EM_CACHE_DIR="$PROJECT_ROOT/.emscripten-cache"
 
 build_image() {
-  docker build -f "$PROJECT_ROOT/docker/emscripten.Dockerfile" -t "$IMAGE_TAG" "$PROJECT_ROOT"
+  "$CONTAINER_ENGINE" build -f "$PROJECT_ROOT/docker/emscripten.Dockerfile" -t "$IMAGE_TAG" "$PROJECT_ROOT"
 }
 
 build_image

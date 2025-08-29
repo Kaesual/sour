@@ -2,6 +2,18 @@
 
 set -euo pipefail
 
+CONTAINER_ENGINE=${CONTAINER_ENGINE:-}
+if [ -z "${CONTAINER_ENGINE}" ]; then
+  if command -v docker >/dev/null 2>&1; then
+    CONTAINER_ENGINE=docker
+  elif command -v podman >/dev/null 2>&1; then
+    CONTAINER_ENGINE=podman
+  else
+    echo "Neither docker nor podman found. Please install one or set CONTAINER_ENGINE."
+    exit 1
+  fi
+fi
+
 IMAGE_TAG="sour-emscripten:3.1.8"
 PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
 
@@ -14,7 +26,7 @@ ASSET_OUTPUT_DIR=${ASSET_OUTPUT_DIR:-output}
 # Space-separated maps to build; use 'none' to skip maps
 ASSET_MAPS=${ASSET_MAPS:-"complex dust2 turbine"}
 
-exec docker run --rm \
+exec "$CONTAINER_ENGINE" run --rm \
   --user "$HOST_UID:$HOST_GID" \
   --env-file "$PROJECT_ROOT/docker/common.env" \
   -e ASSET_OUTPUT_DIR="$ASSET_OUTPUT_DIR" \
