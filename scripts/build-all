@@ -3,8 +3,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-./scripts/build-docker-helper
-./scripts/build-assets-docker
-./scripts/build-game-docker
+pwd
 
-echo "Build complete. You can now run ./scripts/serve-docker to run the game server."
+./scripts/build-docker-image
+./scripts/build-assets
+./scripts/build-game
+
+echo "Build complete. You can now run ./scripts/serve to run the game server."
