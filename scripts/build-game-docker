@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+IMAGE_TAG="sour-emscripten:3.1.8"
+PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
+SCRIPTS_DIR="$PROJECT_ROOT/scripts"
+EM_CACHE_DIR="$PROJECT_ROOT/.emscripten-cache"
+
+build_image() {
+  docker build -f "$PROJECT_ROOT/docker/emscripten.Dockerfile" -t "$IMAGE_TAG" "$PROJECT_ROOT"
+}
+
+build_image
+
+
+# Allow overriding output dir
+GAME_OUTPUT_DIR=${GAME_OUTPUT_DIR:-dist/game}
+
+# Run as the host user to avoid root-owned files; mount a writable EM_CACHE
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
+mkdir -p "$EM_CACHE_DIR"
+
+exec docker run --rm \
+  --user "$HOST_UID:$HOST_GID" \
+  -e GAME_OUTPUT_DIR="$GAME_OUTPUT_DIR" \
+  -e EM_CACHE="/workspace/.emscripten-cache" \
+  -v "$PROJECT_ROOT":/workspace \
+  -w /workspace/game \
+  "$IMAGE_TAG" \
+  bash -lc '
+    set -e
+    source /emsdk/emsdk_env.sh
+
+    echo "[1/3] Building WASM game..."
+    cd /workspace/game
+    ./build
+
+    echo "[2/3] Building web client..."
+    cd /workspace/client
+    yarn install
+    yarn build
+    cp src/index.html src/favicon.ico src/background.png dist/
+    mkdir -p dist/game && cp -r ../game/dist/game/* dist/game/
+
+    echo "[3/3] Staging site for Go server..."
+    rm -rf /workspace/pkg/server/static/site
+    mkdir -p /workspace/pkg/server/static/site
+    cp -r dist/* /workspace/pkg/server/static/site/
+
+    echo "[4/4] Building assets..."
+  '
+
+cd "$SCRIPTS_DIR"
+./build-assets-docker
+
+

@@ -40,6 +40,37 @@ Running `sour` will start a Sour server accessible to web clients at `http://0.0
 
 By serving on `0.0.0.0` by default, the Sour server will be available to other devices on the local network at IP of the device running the Sour server.
 
+### Building the web game with Docker (Emscripten)
+
+If you prefer building in a containerized environment, a Dockerfile and helper script are provided:
+
+```bash
+# Build the image and compile the game into game/dist/game
+./scripts/build-game-docker
+
+# Optionally control output directory
+GAME_OUTPUT_DIR=client/dist/game ./scripts/build-game-docker
+```
+
+This uses an Ubuntu base with Emscripten 3.1.8 (same as CI), mounts your checkout at `/workspace`, and runs `game/build` inside the container. Artifacts will appear under `game/dist/game` by default.
+
+### Running the server in Docker
+
+After building the game and client (and optionally assets), you can run the integrated server with:
+
+```bash
+# Default: serves on 0.0.0.0:1337
+./scripts/serve-docker
+
+# With a config file
+./scripts/serve-docker dev.yaml
+
+# Override bind address/port
+WEB_ADDR=127.0.0.1 WEB_PORT=1337 ./scripts/serve-docker
+```
+
+The script mounts your workspace and runs `go run ./cmd/sour serve` inside the container using your UID/GID so no files are owned by root.
+
 ## Configuration
 
 Sour is highly configurable. When run without arguments, `sour` defaults to running `sour serve` with the [default Sour configuration](https://github.com/cfoust/sour/blob/main/pkg/config/default.yaml). You change Sour's configuration by providing the path to a configuration file to `sour serve`:
@@ -80,7 +111,7 @@ Here is a high level description of the repository's contents:
     - Gives clients both on the web and desktop client access to game servers managed by Sour.
 - `game`: All of the Cube 2 code and Emscripten compilation scripts. Originally this was a fork of [BananaBread](https://github.com/kripken/BananaBread), kripken's original attempt at compiling Sauerbraten for the web. Since then I have upgraded the game to the newest mainline version several times and moved to WebGL2.
 - `client`: A React web application that uses the compiled Sauerbraten game found in `game`, pulls assets, and proxies all server communication over a WebSocket.
-- `assets`: Scripts for building web-compatible game assets. This is an extremely complicated topic and easily the most difficult aspect of shipping Sauerbraten to the web. Check out this [section's README](services/assets) for more information.
+- `assets`: Scripts for building web-compatible game assets. This is an extremely complicated topic and easily the most difficult aspect of shipping Sauerbraten to the web. Check out this [section's README](assets/README.md) for more information.
 
 ## Contributing
 

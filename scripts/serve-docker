@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+IMAGE_TAG="sour-emscripten:3.1.8"
+PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
+
+# Build the image if missing
+if ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
+  docker build -f "$PROJECT_ROOT/docker/emscripten.Dockerfile" -t "$IMAGE_TAG" "$PROJECT_ROOT"
+fi
+
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
+
+# Ports and address
+WEB_ADDR=${WEB_ADDR:-0.0.0.0}
+WEB_PORT=${WEB_PORT:-1337}
+
+# Optional config file path (in host workspace). Pass as first arg.
+CONFIG_FILE=${1:-}
+
+# Ensure local assets index symlink exists (use relative path so it works in container)
+if [ -f "$PROJECT_ROOT/assets/dist/.index.source" ]; then
+  # Always refresh symlink to ensure it works inside the container
+  (cd "$PROJECT_ROOT/assets" && ln -sf "dist/.index.source" ".index.source")
+fi
+
+CMD="go run ./cmd/sour serve"
+if [ -n "$CONFIG_FILE" ]; then
+  # Map host path to container path
+  if [ -f "$CONFIG_FILE" ]; then
+    REL="${CONFIG_FILE#$PROJECT_ROOT/}"
+    CMD="go run ./cmd/sour serve \"$REL\""
+  fi
+else
+  # Auto-generate a simple config pointing to local assets index if present
+  if [ -f "$PROJECT_ROOT/assets/.index.source" ]; then
+    AUTO_CFG="$PROJECT_ROOT/dev.auto.yaml"
+    cat > "$AUTO_CFG" <<EOF
+server:json
+  cacheDirectory: "./.cache/assets"
+  assets:
+    - "fs:assets/dist/.index.source"
+client:
+  assets:
+    - "#origin/assets/0/.index.source"
+EOF
+    REL="${AUTO_CFG#$PROJECT_ROOT/}"
+    CMD="go run ./cmd/sour serve \"$REL\""
+  fi
+fi
+
+exec docker run \
+  --rm \
+  --user "$HOST_UID:$HOST_GID" \
+  --name sour-serve \
+  -e HOME="/workspace/.home" \
+  -p "$WEB_ADDR:$WEB_PORT:$WEB_PORT" \
+  -v "$PROJECT_ROOT":/workspace \
+  -w /workspace \
+  "$IMAGE_TAG" \
+  bash -lc "$CMD"

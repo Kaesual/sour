@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+IMAGE_TAG="sour-emscripten:3.1.8"
+PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
+
+build_image() {
+  docker build -f "$PROJECT_ROOT/docker/emscripten.Dockerfile" -t "$IMAGE_TAG" "$PROJECT_ROOT"
+}
+
+build_image
+
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
+
+ASSET_OUTPUT_DIR=${ASSET_OUTPUT_DIR:-output}
+# Space-separated maps to build; use 'none' to skip maps
+ASSET_MAPS=${ASSET_MAPS:-"complex dust2 turbine"}
+
+exec docker run --rm \
+  --user "$HOST_UID:$HOST_GID" \
+  -e ASSET_OUTPUT_DIR="$ASSET_OUTPUT_DIR" \
+  -e HOME="/workspace/.home" \
+  -e PIP_CACHE_DIR="/workspace/.pip-cache" \
+  -e ASSET_MAPS="$ASSET_MAPS" \
+  -v "$PROJECT_ROOT":/workspace \
+  -w /workspace/assets \
+  "$IMAGE_TAG" \
+  bash -lc '
+    set -e
+    mkdir -p "$HOME" "$PIP_CACHE_DIR"
+    python3 -m pip install --user -r requirements.txt || true
+    ./setup
+    # Rebuild sourdump to ensure latest code is used
+    rm -f sourdump
+    go build -o sourdump ../cmd/sourdump/main.go
+    # Build base assets; configure maps via ASSET_MAPS
+    # Expand ASSET_MAPS into positional args
+    set -- $ASSET_MAPS
+    python3 base.py \
+      --root https://static.sourga.me/blobs/6481/.index.source \
+      --models \
+      --download \
+      --outdir dist \
+      "$@"
+  '
+
+

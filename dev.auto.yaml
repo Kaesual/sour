@@ -1,0 +1,7 @@
+server:json
+  cacheDirectory: "./.cache/assets"
+  assets:
+    - "fs:assets/dist/.index.source"
+client:
+  assets:
+    - "#origin/assets/0/.index.source"

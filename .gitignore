@@ -8,3 +8,5 @@ earthly/**
 /sour
 /sourdump
 /sour-build
+.home/
+.pip-cache/

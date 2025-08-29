@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
+
+rm -rf "$PROJECT_ROOT/game/dist/game" || true
+rm -rf "$PROJECT_ROOT/client/dist" || true
+rm -rf "$PROJECT_ROOT/pkg/server/static/site" || true
+rm -rf "$PROJECT_ROOT/.emscripten-cache" || true
+
+# Also remove common temporary outputs under assets
+rm -rf "$PROJECT_ROOT/assets/dist" || true
+
+echo "Cleaned generated outputs."
