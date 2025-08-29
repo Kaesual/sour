@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
+
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
+WEB_ADDR=${WEB_ADDR:-0.0.0.0}
+WEB_PORT=${WEB_PORT:-1337}
+
+# Optionally pass a config file (e.g., dev.auto.yaml)
+CONFIG_FILE=${1:-}
+
+handle_signal() {
+  echo "SIGINT received, stopping container..."
+  docker stop sour-serve
+  exit 0
+}
+trap handle_signal SIGINT
+trap handle_signal SIGTERM
+
+docker run \
+  --rm \
+  --init \
+  --name sour-serve \
+  --user "$HOST_UID:$HOST_GID" \
+  --env-file "$PROJECT_ROOT/docker/common.env" \
+  -p "$WEB_ADDR:$WEB_PORT:$WEB_PORT" \
+  -v "$PROJECT_ROOT/dev.auto.yaml":/workspace/dev.auto.yaml:ro \
+  sour-serve:local &
+
+PID=$!
+wait $PID

@@ -220,6 +220,9 @@ func serveCommand(configs []string) error {
 	go cluster.PollUsers(ctx, newConnections)
 	go cluster.PollDuels(ctx)
 
+	// Start periodic server list watcher/broadcasts for the web server browser
+	wsIngress.StartWatcher(ctx)
+
 	// Encode the client config as json
 	clientConfig, err := json.Marshal(config.Client)
 	if err != nil {

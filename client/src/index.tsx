@@ -375,13 +375,22 @@ function App() {
   React.useEffect(() => {
     if (state.type !== GameStateType.Ready) return
 
-    const menu = `
-    newgui discord [
-        guibutton "copy authkey command.." [js "Module.discord.copyKey()"]
-        //guibutton "regenerate auth key.." [js "Module.discord.regenKey()"]
-        guibutton "log out.." [js "Module.discord.logout()"]
-    ]
+    // To show the server browser, add:
+    //   guibutton "server browser.." "showgui servers"
+    // 
+    // Proxy setup is incomplete though at the moment, so
+    // connecting won't work
 
+    // Removed discord button for now
+    // 
+    //   newgui discord [
+    //       guibutton "copy authkey command.." [js "Module.discord.copyKey()"]
+    //       //guibutton "regenerate auth key.." [js "Module.discord.regenKey()"]
+    //       guibutton "log out.." [js "Module.discord.logout()"]
+    //   ]
+
+
+    const menu = `
     newgui content [
         guibutton "mods.."  "showgui mods"
         guibutton "put mods in url.."  [js "Module.assets.modsToURL()"]
@@ -417,6 +426,10 @@ function App() {
           guibar
       ] [
           ${CONFIG.menuOptions}
+          guibutton "join insta-dust2" "join insta-dust2"
+          guibutton "join ffa-dust2" "join ffa-dust2"
+          guibutton "join insta rotating maps" "join insta"
+          guibutton "join ffa rotating maps" "join lobby"
           guibutton "create private game..." "creategame ffa"
       ]
       guibutton "random map.."  "map random"
@@ -816,17 +829,18 @@ function App() {
 
       if (serverMessage.Op === MessageType.Info) {
         const { Cluster, Master } = serverMessage
+        const combined = [...(Master || []), ...(Cluster || [])]
 
         if (
           BananaBread == null ||
           BananaBread.execute == null ||
           BananaBread.injectServer == null
         ) {
-          cachedServers = Master
+          cachedServers = combined
           return
         }
 
-        injectServers(Master)
+        injectServers(combined)
         return
       }
 

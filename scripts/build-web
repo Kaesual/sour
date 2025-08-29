@@ -14,7 +14,8 @@ HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 mkdir -p "$EM_CACHE_DIR"
 
-exec docker run --rm \
+exec docker run \
+  --rm \
   --user "$HOST_UID:$HOST_GID" \
   --env-file "$PROJECT_ROOT/docker/common.env" \
   -e GAME_OUTPUT_DIR="$GAME_OUTPUT_DIR" \
@@ -25,7 +26,16 @@ exec docker run --rm \
     set -e
     source /emsdk/emsdk_env.sh
 
-    echo "[1/1] Building WASM game..."
-    cd /workspace/game
-    ./build
+    echo "[1/2] Building web client..."
+    cd /workspace/client
+    rm -rf dist
+    yarn install
+    yarn build
+    cp src/index.html src/favicon.ico src/background.png dist/
+    mkdir -p dist/game && cp -r ../game/dist/game/* dist/game/
+
+    echo "[2/2] Staging site for Go server..."
+    rm -rf /workspace/pkg/server/static/site
+    mkdir -p /workspace/pkg/server/static/site
+    cp -r dist/* /workspace/pkg/server/static/site/
   '

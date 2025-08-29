@@ -36,39 +36,10 @@ if [ -n "$CONFIG_FILE" ]; then
     CMD="go run ./cmd/sour serve \"$REL\""
   fi
 else
-  # Auto-generate a simple config pointing to local assets index if present
-  if [ -f "$PROJECT_ROOT/assets/.index.source" ]; then
-    AUTO_CFG="$PROJECT_ROOT/dev.auto.yaml"
-    cat > "$AUTO_CFG" <<EOF
-server:
-  cacheDirectory: "./.cache/assets"
-  assets:
-    - "fs:assets/dist/.index.source"
-  presets:
-    - name: "default"
-      default: true
-      config:
-        defaultMode: "ffa"
-        defaultMap: "complex"
-        maps: ["complex", "dust2", "turbine"]
-    - name: "insta"
-      config:
-        defaultMode: "insta"
-        defaultMap: "dust2"
-        maps: ["complex", "dust2", "turbine"]
-  spaces:
-    - preset: default
-      config:
-        alias: lobby
-    - preset: insta
-      config:
-        alias: insta
-client:
-  assets:
-    - "#origin/assets/0/.index.source"
-EOF
-    REL="${AUTO_CFG#$PROJECT_ROOT/}"
-    CMD="go run ./cmd/sour serve \"$REL\""
+  # If a dev.auto.yaml exists, use it; otherwise run with defaults
+  if [ -f "$PROJECT_ROOT/dev.auto.yaml" ]; then
+    REL="${PROJECT_ROOT#$PROJECT_ROOT/}dev.auto.yaml"
+    CMD="go run ./cmd/sour serve \"dev.auto.yaml\""
   fi
 fi
 
@@ -87,7 +58,7 @@ docker run \
   --init \
   --user "$HOST_UID:$HOST_GID" \
   --name sour-serve \
-  -e HOME="/workspace/.home" \
+  --env-file "$PROJECT_ROOT/docker/common.env" \
   -p "$WEB_ADDR:$WEB_PORT:$WEB_PORT" \
   -v "$PROJECT_ROOT":/workspace \
   -w /workspace \

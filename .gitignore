@@ -10,3 +10,7 @@ earthly/**
 /sour-build
 .home/
 .pip-cache/
+.go-cache/
+.emscripten-cache/
+.gopath/
+bin/sour

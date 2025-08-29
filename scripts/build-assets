@@ -8,15 +8,17 @@ PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 
+# Cache for downloaded assets persists across runs
+ASSET_CACHE_DIR=${ASSET_CACHE_DIR:-cache}
 ASSET_OUTPUT_DIR=${ASSET_OUTPUT_DIR:-output}
 # Space-separated maps to build; use 'none' to skip maps
 ASSET_MAPS=${ASSET_MAPS:-"complex dust2 turbine"}
 
 exec docker run --rm \
   --user "$HOST_UID:$HOST_GID" \
+  --env-file "$PROJECT_ROOT/docker/common.env" \
   -e ASSET_OUTPUT_DIR="$ASSET_OUTPUT_DIR" \
-  -e HOME="/workspace/.home" \
-  -e PIP_CACHE_DIR="/workspace/.pip-cache" \
+  -e ASSET_CACHE_DIR="$ASSET_CACHE_DIR" \
   -e ASSET_MAPS="$ASSET_MAPS" \
   -v "$PROJECT_ROOT":/workspace \
   -w /workspace/assets \
@@ -25,6 +27,7 @@ exec docker run --rm \
     set -e
     mkdir -p "$HOME" "$PIP_CACHE_DIR"
     python3 -m pip install --user -r requirements.txt || true
+    mkdir -p "$ASSET_CACHE_DIR"
     ./setup
     # Rebuild sourdump to ensure latest code is used
     rm -f sourdump
