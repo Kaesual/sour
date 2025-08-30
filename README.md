@@ -1,18 +1,20 @@
 <p align="center">
     <a href="https://sourga.me" target="_blank">
-        <img src="gh-assets/header.png" alt="Sour Cover Image">
+        <img src="gh-assets/sour-cg.png" alt="Sour on app.cg Cover Image">
     </a>
 </p>
 
 ## What is this?
 
-This is a fork of the excellent [original sour repository](https://github.com/cfoust/sour) made by cfoust. It has been made with the goal to embed sauerbraten as an in-community game experience into the Common Ground platform. I want to enable a Quake-like experience, and add additional features like Tournaments between communities.
-
-
+This is a fork of the excellent [original sour repository](https://github.com/cfoust/sour) made by cfoust. It has been made with the goal to embed sauerbraten as an in-community game experience into the Common Ground platform. I want to enable a Quake-like experience, and I'm planning to add additional features like Tournaments between communities - stay tuned! 🚀
 
 Sour is a <a target="_blank" href="http://sauerbraten.org/">Cube 2: Sauerbraten</a> server that serves a fully-featured web-version of Sauerbraten (with support for mobile devices) in addition to accepting connections from the traditional, desktop version of the game. Sour is the easiest way to play Sauerbraten with your friends.
 
-<a target="_blank" href="https://sourga.me/">Give it a try.</a>
+There's the original <a target="_blank" href="https://sourga.me/">sourga.me</a> run by cfoust.
+
+And there's this version running as a <a target="_blank" href="https://app.cg/c/videogames/">videogames community plugin on app.cg</a>, where you can also stream, chat and discover other games I made.
+
+**Note: This readme is work in progress and still needs some updates!**
 
 ## Installation
 
