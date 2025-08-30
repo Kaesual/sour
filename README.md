@@ -16,6 +16,15 @@ And there's this version running as a <a target="_blank" href="https://app.cg/c/
 
 **Note: This readme is work in progress and still needs some updates!**
 
+**2025-08-30 Updates made in this repository**
+
+- The build is now fully dockerized, completely in userspace. It can also generate a ready-to-host docker image `janhan/sour` with all assets that is also available here: https://hub.docker.com/r/janhan/sour
+- Fixed an issue that prevented keyboard events from being picked up when running in iframes
+- Made hosting possible under a relative path when combined with a reverse nginx proxy + rewrite rule
+- And some more I probably forgot :D
+
+The docker build is only tested on linux, with docker, but I tried to make it podman compatible.
+
 ## Installation
 
 You can download an archive containing the Sour server and all necessary assets from [the releases page](https://github.com/cfoust/sour/releases). For now, only Linux and macOS are supported.
@@ -63,28 +72,24 @@ By serving on `0.0.0.0` by default, the Sour server will be available to other d
 If you prefer building in a containerized environment, a Dockerfile and helper script are provided:
 
 ```bash
-# Build the image and compile the game into game/dist/game
-./scripts/build-game-docker
-
-# Optionally control output directory
-GAME_OUTPUT_DIR=client/dist/game ./scripts/build-game-docker
+# Build everything and put it into a nice new docker image, ready to host
+./scripts/build-all
 ```
 
 This uses an Ubuntu base with Emscripten 3.1.8 (same as CI), mounts your checkout at `/workspace`, and runs `game/build` inside the container. Artifacts will appear under `game/dist/game` by default.
 
+Needs more updating here.
+
 ### Running the server in Docker
 
-After building the game and client (and optionally assets), you can run the integrated server with:
+After building, you can run the integrated server locally with:
 
 ```bash
 # Default: serves on 0.0.0.0:1337
-./scripts/serve-docker
-
-# With a config file
-./scripts/serve-docker dev.yaml
+./scripts/run-serve-image
 
 # Override bind address/port
-WEB_ADDR=127.0.0.1 WEB_PORT=1337 ./scripts/serve-docker
+WEB_ADDR=127.0.0.1 WEB_PORT=1337 ./scripts/run-serve-image
 ```
 
 The script mounts your workspace and runs `go run ./cmd/sour serve` inside the container using your UID/GID so no files are owned by root.
