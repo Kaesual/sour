@@ -9,9 +9,10 @@ RUN apt-get update && apt-get install -y \
 
 # Copy built artifacts from mounted context at build time
 # Expect caller to have run build-web, build-game, build-assets, build-proxy
-COPY pkg/server/static/site /workspace/pkg/server/static/site
 COPY assets/dist /workspace/assets/dist
 RUN ln -s /workspace/assets/dist/.index.source /workspace/assets/.index.source
+
+COPY pkg/server/static/site /workspace/pkg/server/static/site
 COPY bin/sour /workspace/bin/sour
 COPY proxy/wsproxy /workspace/proxy/wsproxy
 

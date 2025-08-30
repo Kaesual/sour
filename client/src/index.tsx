@@ -302,9 +302,9 @@ function App() {
 
     Module.socket = (addr, port) => {
       const { protocol, host } = window.location
-      const prefix = `${
-        protocol === 'https:' ? 'wss://' : 'ws:/'
-      }${host}/service/proxy/`
+      const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:'
+      const basePath = new URL('service/proxy/', window.location.href).pathname
+      const prefix = `${wsProtocol}//${host}${basePath}`
 
       return new WebSocket(
         addr === 'sour' ? prefix : `${prefix}u/${addr}:${port}`,
@@ -453,10 +453,14 @@ function App() {
 
     const [serverURL] = CONFIG.servers
 
-    const { protocol, host } = window.location
-    const ws = new WebSocket(
-      `${protocol === 'https:' ? 'wss://' : 'ws:/'}${serverURL}`
-    )
+    const { protocol } = window.location
+    const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:'
+    const sameHost = serverURL.startsWith(window.location.host)
+    const baseWsPath = new URL('ws/', window.location.href).pathname
+    const targetUrl = sameHost
+      ? `${wsProtocol}//${window.location.host}${baseWsPath}`
+      : `${wsProtocol}//${serverURL}`
+    const ws = new WebSocket(targetUrl)
     ws.binaryType = 'arraybuffer'
 
     ws.onopen = () => {
