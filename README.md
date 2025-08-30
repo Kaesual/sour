@@ -18,7 +18,8 @@ And there's this version running as a <a target="_blank" href="https://app.cg/c/
 
 **2025-08-30 Updates made in this repository**
 
-- The build is now fully dockerized, completely in userspace. It can also generate a ready-to-host docker image `janhan/sour` with all assets that is also available here: https://hub.docker.com/r/janhan/sour
+- The build is now fully dockerized, completely in userspace. It can also generate a ready-to-host docker image with all assets. The image is also available [here](https://hub.docker.com/r/janhan/sour), but it currently lacks the config file (see `scripts/run-serve-image` for how to do it).
+
 - Fixed an issue that prevented keyboard events from being picked up when running in iframes
 - Made hosting possible under a relative path when combined with a reverse nginx proxy + rewrite rule
 - And some more I probably forgot :D
