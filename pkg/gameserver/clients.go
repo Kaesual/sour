@@ -2,6 +2,7 @@ package gameserver
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -218,6 +219,9 @@ func (s *Server) SendWelcome(c *Client) {
 
 // Tells other clients that the client disconnected, giving a disconnect reason in case it's not a normal leave.
 func (cm *ClientManager) Disconnect(c *Client, reason disconnectreason.ID) {
+	log.Printf("Client %d (CN: %d) disconnecting: final state=%d, life sequence=%d, reason=%s", 
+		c.SessionID, c.CN, c.State, c.LifeSequence, reason.String())
+	
 	cm.Relay(c, P.ClientDisconnected{int32(c.CN)})
 
 	msg := ""

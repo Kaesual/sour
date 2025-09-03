@@ -2,6 +2,7 @@ package relay
 
 import (
 	"errors"
+	"sort"
 	"time"
 
 	"github.com/cfoust/sour/pkg/game/protocol"
@@ -126,21 +127,26 @@ func (r *Relay) FlushPositionAndSend(cn uint32, p protocol.Message) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	// Create deterministic order for consistent packet delivery
+	order := make([]uint32, 0, len(r.send))
+	for _cn := range r.send {
+		if _cn != cn {
+			order = append(order, _cn)
+		}
+	}
+	sort.Slice(order, func(i, j int) bool {
+		return order[i] < order[j]
+	})
+
 	if pos := r.positions[cn]; pos != nil {
-		for _cn, send := range r.send {
-			if _cn == cn {
-				continue
-			}
-			send(0, pos)
+		for _, _cn := range order {
+			r.send[_cn](0, pos)
 		}
 		delete(r.positions, cn)
 	}
 
-	for _cn, send := range r.send {
-		if _cn == cn {
-			continue
-		}
-		send(0, []protocol.Message{p})
+	for _, _cn := range order {
+		r.send[_cn](0, []protocol.Message{p})
 	}
 }
 
@@ -172,8 +178,16 @@ func (r *Relay) flush(packets map[uint32][]protocol.Message, prefix func(uint32,
 	lengths := map[uint32]int{}
 	combined := make([]protocol.Message, 0, 2*len(packets)*40)
 
+	// Create deterministic order instead of random map iteration
 	for cn := range r.send {
 		order = append(order, cn)
+	}
+	// Sort to ensure consistent ordering across flushes
+	sort.Slice(order, func(i, j int) bool {
+		return order[i] < order[j]
+	})
+
+	for _, cn := range order {
 		pkt := packets[cn]
 		if pkt == nil {
 			continue
