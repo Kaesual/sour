@@ -41,6 +41,7 @@ exec "$CONTAINER_ENGINE" run \
     echo "[1/2] Building web client..."
     cd /workspace/client
     rm -rf dist
+    rm -rf .parcel-cache
     yarn install
     yarn build
     cp -a src/index.html src/favicon.ico src/background.png dist/
