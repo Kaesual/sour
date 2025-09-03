@@ -98,6 +98,8 @@ Sour is highly configurable. When run without arguments, `sour` defaults to runn
 
 Sour can be configured using `.yaml` or `.json` files; the structure is the same in both cases.
 
+Warning: The section below is from the original readme and hasn't been updated yet, it will probably need a docker command instead as the docker image is where the system requirements are installed.
+
 To print the default configuration to standard output, run `sour config`:
 
 ```bash
