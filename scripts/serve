@@ -57,14 +57,14 @@ fi
 
 handle_signal() {
   echo "SIGINT received, stopping container..."
-  "$CONTAINER_ENGINE" stop sour-serve
+  "$CONTAINER_ENGINE" stop sour-game
   exit 0
 }
 trap handle_signal SIGINT
 trap handle_signal SIGTERM
 
 cleanup() {
-  "$CONTAINER_ENGINE" rm -f sour-serve >/dev/null 2>&1 || true
+  "$CONTAINER_ENGINE" rm -f sour-game >/dev/null 2>&1 || true
 }
 trap cleanup INT TERM EXIT
 
@@ -72,7 +72,7 @@ trap cleanup INT TERM EXIT
   --rm \
   --init \
   --user "$HOST_UID:$HOST_GID" \
-  --name sour-serve \
+  --name sour-game \
   --env-file "$PROJECT_ROOT/docker/common.env" \
   -p "$WEB_ADDR:$WEB_PORT:$WEB_PORT" \
   -v "$PROJECT_ROOT":/workspace \

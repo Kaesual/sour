@@ -16,32 +16,22 @@ fi
 
 IMAGE_TAG="sour-emscripten:3.1.8"
 PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
-EM_CACHE_DIR="$PROJECT_ROOT/.emscripten-cache"
-
-# Allow overriding output dir
-GAME_OUTPUT_DIR=${GAME_OUTPUT_DIR:-dist/game}
-
-# Run as the host user to avoid root-owned files; mount a writable EM_CACHE
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
-mkdir -p "$EM_CACHE_DIR"
 
+# Build sour binary
 "$CONTAINER_ENGINE" run \
   --rm \
   --user "$HOST_UID:$HOST_GID" \
   --env-file "$PROJECT_ROOT/docker/common.env" \
-  -e GAME_OUTPUT_DIR="$GAME_OUTPUT_DIR" \
   -v "$PROJECT_ROOT":/workspace \
-  -w /workspace/game \
+  -w /workspace \
   "$IMAGE_TAG" \
-  bash -lc '
-    set -e
-    source /emsdk/emsdk_env.sh
+  bash -lc 'go build -o /workspace/bin/sour ./cmd/sour'
 
-    echo "[1/1] Building WASM game..."
-    cd /workspace/game
-    rm -rf dist/game
-    ./build
-  '
+# Build the serve image
+"$CONTAINER_ENGINE" build -f "$PROJECT_ROOT/docker/serve.Dockerfile" -t sour-game:latest "$PROJECT_ROOT"
 
-echo "Successfully built game"
+echo "Built image sour-game:latest"
+
+
