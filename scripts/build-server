@@ -29,9 +29,4 @@ HOST_GID="$(id -g)"
   "$IMAGE_TAG" \
   bash -lc 'go build -o /workspace/bin/sour ./cmd/sour'
 
-# Build the serve image
-"$CONTAINER_ENGINE" build -f "$PROJECT_ROOT/docker/serve.Dockerfile" -t sour-serve:latest "$PROJECT_ROOT"
-
-echo "Built image sour-serve:latest"
-
-
+echo "Successfully built sour server binary"
