@@ -21,7 +21,7 @@ if [ -n "$CONFIG_FILE" ]; then
 else
   /workspace/bin/sour serve &
 fi
-SERVER_PID=$?
+SERVER_PID=$!
 # Ensure the script stops and cleans up on SIGINT and SIGTERM
 
 cleanup() {
@@ -32,4 +32,8 @@ cleanup() {
 
 trap cleanup INT TERM
 
-wait
+# Wait specifically for the server process - if it dies, the container should exit
+wait $SERVER_PID
+
+# If we reach here, the server has exited - clean up the proxy
+[[ -n "${PROXY_PID:-}" ]] && kill "${PROXY_PID}" >/dev/null 2>&1 || true

@@ -108,8 +108,8 @@ func (s *Server) HandlePacket(client *Client, channelID uint8, message P.Message
 			client.Positions.Publish(msg)
 			client.Position = mapVec(msg.State.O)
 		} else {
-			log.Printf("Position update rejected for client %d (CN: %d): client state is %d (expected Alive=%d), life sequence=%d", 
-				client.SessionID, client.CN, client.State, playerstate.Alive, client.LifeSequence)
+			log.Printf("Position update rejected for client %d (CN: %d): client state is %d (expected Alive=%d), life sequence=%d, lastSpawnAttempt.IsZero=%t", 
+				client.SessionID, client.CN, client.State, playerstate.Alive, client.LifeSequence, client.LastSpawnAttempt.IsZero())
 		}
 		return
 
@@ -348,12 +348,13 @@ func (s *Server) HandlePacket(client *Client, channelID uint8, message P.Message
 	case P.N_SHOOT:
 		msg := message.(P.Shoot)
 
-		log.Printf("Shoot request from client %d (CN: %d): state=%d, weapon=%d", 
-			client.SessionID, client.CN, client.State, msg.Gun)
+		log.Printf("Shoot request from client %d (CN: %d): state=%d, weapon=%d, ammo=%d", 
+			client.SessionID, client.CN, client.State, msg.Gun, client.Ammo[weapon.ID(msg.Gun)])
 
 		wpn := weapon.ByID(weapon.ID(msg.Gun))
 		if time.Now().Before(client.GunReloadEnd) || client.Ammo[wpn.ID] <= 0 {
-			log.Printf("Shoot rejected for client %d (CN: %d): reload or no ammo", client.SessionID, client.CN)
+			log.Printf("Shoot rejected for client %d (CN: %d): reload or no ammo, ammo=%d, reloadEnd=%v", 
+				client.SessionID, client.CN, client.Ammo[wpn.ID], client.GunReloadEnd)
 			return
 		}
 

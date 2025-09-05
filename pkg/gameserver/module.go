@@ -302,22 +302,30 @@ func (s *Server) UniqueName(p *game.Player) string {
 func (s *Server) Spawn(client *Client) {
 	oldLifeSequence := client.LifeSequence
 	client.Spawn()
+	
+	// CRITICAL FIX: Set state to Alive immediately after spawn
+	// This prevents the race condition where position updates arrive
+	// before N_SPAWN confirmation on channel 1
+	client.State = playerstate.Alive
+	
 	log.Info().
 		Uint32("sessionID", client.SessionID).
 		Uint32("CN", client.CN).
 		Int32("oldLifeSequence", oldLifeSequence).
 		Int32("newLifeSequence", client.LifeSequence).
-		Msg("Client spawned: life sequence incremented")
+		Msg("Client spawned: life sequence incremented and state set to Alive")
 	s.GameMode.Spawn(&client.PlayerState)
 }
 
 func (s *Server) ConfirmSpawn(client *Client, lifeSequence, _weapon int32) {
-	if client.State != playerstate.Dead || lifeSequence != client.LifeSequence || client.LastSpawnAttempt.IsZero() {
+	// Updated validation: client should now be Alive (set in Spawn() function)
+	// and have matching life sequence
+	if client.State != playerstate.Alive || lifeSequence != client.LifeSequence || client.LastSpawnAttempt.IsZero() {
 		log.Warn().
 			Uint32("sessionID", client.SessionID).
 			Uint32("CN", client.CN).
 			Int("state", int(client.State)).
-			Int("expectedState", int(playerstate.Dead)).
+			Int("expectedState", int(playerstate.Alive)).
 			Int32("lifeSequence", lifeSequence).
 			Int32("expectedLifeSequence", client.LifeSequence).
 			Bool("lastSpawnAttemptIsZero", client.LastSpawnAttempt.IsZero()).
@@ -325,15 +333,30 @@ func (s *Server) ConfirmSpawn(client *Client, lifeSequence, _weapon int32) {
 		return
 	}
 
-	// FIRST: Update client state to Alive BEFORE broadcasting
-	client.State = playerstate.Alive
-	client.SelectedWeapon = weapon.ByID(weapon.ID(_weapon))
+	// Clear spawn attempt - spawn process is complete
 	client.LastSpawnAttempt = time.Time{}
 	
-	log.Info().
-		Uint32("sessionID", client.SessionID).
-		Uint32("CN", client.CN).
-		Msg("Spawn confirmed: client set to Alive state")
+	// Follow original protocol: set weapon to what client confirms
+	// The client sends their CURRENT weapon choice in N_SPAWN (after any weapon switches)
+	// This ensures client-server weapon synchronization
+	requestedWeapon := weapon.ByID(weapon.ID(_weapon))
+	if _weapon < int32(weapon.Saw) || _weapon > int32(weapon.Pistol) {
+		// Invalid weapon, keep current
+		log.Warn().
+			Uint32("sessionID", client.SessionID).
+			Uint32("CN", client.CN).
+			Int32("requestedWeapon", _weapon).
+			Int("currentWeapon", int(client.SelectedWeapon.ID)).
+			Msg("Invalid weapon in spawn confirmation, keeping current")
+	} else {
+		// Update to client's actual weapon choice
+		client.SelectedWeapon = requestedWeapon
+		log.Info().
+			Uint32("sessionID", client.SessionID).
+			Uint32("CN", client.CN).
+			Int("weapon", int(requestedWeapon.ID)).
+			Msg("Spawn confirmed: weapon synchronized with client")
+	}
 
 	// SECOND: Notify ALL clients (including spawning client - they need their own spawn confirmation)
 	client.Packets.Publish(P.SpawnResponse{
