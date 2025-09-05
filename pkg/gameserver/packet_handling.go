@@ -103,32 +103,33 @@ func (s *Server) HandlePacket(client *Client, channelID uint8, message P.Message
 		msg := message.(P.Pos)
 
 		// client sending his position and movement in the world
-		if client.State == playerstate.Alive {
+		// Allow position updates from both Alive players and Editing players (matches original server)
+		if client.State == playerstate.Alive || client.State == playerstate.Editing {
 			msg.State.LifeSequence = client.LifeSequence
 			client.Positions.Publish(msg)
 			client.Position = mapVec(msg.State.O)
 		} else {
-			log.Printf("Position update rejected for client %d (CN: %d): client state is %d (expected Alive=%d), life sequence=%d, lastSpawnAttempt.IsZero=%t", 
-				client.SessionID, client.CN, client.State, playerstate.Alive, client.LifeSequence, client.LastSpawnAttempt.IsZero())
+			log.Printf("Position update rejected for client %d (CN: %d): client state is %d (expected Alive=%d or Editing=%d), life sequence=%d, lastSpawnAttempt.IsZero=%t", 
+				client.SessionID, client.CN, client.State, playerstate.Alive, playerstate.Editing, client.LifeSequence, client.LastSpawnAttempt.IsZero())
 		}
 		return
 
 	case P.N_JUMPPAD:
 		msg := message.(P.JumpPad)
-		if client.State == playerstate.Alive {
+		if client.State == playerstate.Alive || client.State == playerstate.Editing {
 			s.relay.FlushPositionAndSend(client.CN, msg)
 		} else {
-			log.Printf("Jumppad event rejected for client %d (CN: %d): client state is %d (not Alive)", 
+			log.Printf("Jumppad event rejected for client %d (CN: %d): client state is %d (expected Alive or Editing)", 
 				client.SessionID, client.CN, client.State)
 		}
 
 	case P.N_TELEPORT:
 		msg := message.(P.Teleport)
 
-		if client.State == playerstate.Alive {
+		if client.State == playerstate.Alive || client.State == playerstate.Editing {
 			s.relay.FlushPositionAndSend(client.CN, msg)
 		} else {
-			log.Printf("Teleport event rejected for client %d (CN: %d): client state is %d (not Alive)", 
+			log.Printf("Teleport event rejected for client %d (CN: %d): client state is %d (expected Alive or Editing)", 
 				client.SessionID, client.CN, client.State)
 		}
 
