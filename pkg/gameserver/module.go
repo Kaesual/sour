@@ -390,7 +390,10 @@ func (s *Server) Disconnect(client *Client, reason disconnectreason.ID) {
 	s.Clients.Disconnect(client, reason)
 	err := s.relay.RemoveClient(client.CN)
 	if err != nil {
-		log.Error().Err(err).Msgf("could not disconnect %d", client.SessionID)
+		// ZOMBIE CN PREVENTION: Even if RemoveClient fails, our resilient AddClient
+		// will force-cleanup any zombie CNs when new clients connect to the same CN.
+		// This prevents accumulation while maintaining system robustness.
+		log.Warn().Err(err).Uint32("sessionID", client.SessionID).Uint32("CN", client.CN).Msg("Relay cleanup failed, but will be force-cleaned on CN reuse")
 	}
 	if len(s.Clients.PrivilegedUsers()) == 0 {
 		s.Unsupervised()
