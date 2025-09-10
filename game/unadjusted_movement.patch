@@ -1,0 +1,29 @@
+--- sauerbraten.js.orig	2025-09-10 22:28:09.208186363 +0200
++++ sauerbraten.js 2025-09-10 22:29:26.992134029 +0200
+@@ -5280,7 +5280,7 @@
+    if (Module["elementPointerLock"]) {
+     canvas.addEventListener("click", function(ev) {
+      if (!Browser.pointerLock && Module["canvas"].requestPointerLock) {
+-      Module["canvas"].requestPointerLock();
++      Module["canvas"].requestPointerLock({ unadjustedMovement: true });
+       ev.preventDefault();
+      }
+     }, false);
+@@ -5351,7 +5351,7 @@
+    var canvasContainer = canvas.parentNode;
+    if ((document["fullscreenElement"] || document["mozFullScreenElement"] || document["msFullscreenElement"] || document["webkitFullscreenElement"] || document["webkitCurrentFullScreenElement"]) === canvasContainer) {
+     canvas.exitFullscreen = Browser.exitFullscreen;
+-    if (Browser.lockPointer) canvas.requestPointerLock();
++    if (Browser.lockPointer) canvas.requestPointerLock({ unadjustedMovement: true });
+     Browser.isFullscreen = true;
+     if (Browser.resizeCanvas) {
+      Browser.setFullscreenCanvasSize();
+@@ -6770,7 +6770,7 @@
+ 
+ function requestPointerLock(target) {
+  if (target.requestPointerLock) {
+-  target.requestPointerLock();
++  target.requestPointerLock({ unadjustedMovement: true });
+  } else if (target.msRequestPointerLock) {
+   target.msRequestPointerLock();
+  } else {
