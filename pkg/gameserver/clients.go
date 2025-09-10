@@ -50,11 +50,12 @@ func (cm *ClientManager) GetClientByCN(cn uint32) *Client {
 	cm.mutex.RLock()
 	defer cm.mutex.RUnlock()
 
-	if int(cn) < 0 || int(cn) >= len(cm.clients) {
-		return nil
+	for _, client := range cm.clients {
+		if client.CN == cn {
+			return client
+		}
 	}
-
-	return cm.clients[cn]
+	return nil
 }
 
 func (cm *ClientManager) GetClientByID(sessionId uint32) *Client {
