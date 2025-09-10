@@ -118,6 +118,33 @@ const pushURLState = (url: string) => {
 
 const clearURLState = () => pushURLState('/')
 
+const MODE_NAMES = [
+  'ffa',
+  'coop-edit',
+  'teamplay',
+  'insta',
+  'insta team',
+  'efficiency',
+  'efficiency team',
+  'tactics',
+  'tactics team',
+  'capture',
+  'regen capture',
+  'ctf',
+  'insta ctf',
+  'protect',
+  'insta protect',
+  'hold',
+  'insta hold',
+  'efficiency ctf',
+  'efficiency protect',
+  'efficiency hold',
+  'collect',
+  'insta collect',
+  'efficiency collect',
+] as const
+const modeName = (id: number): string => MODE_NAMES[id] ?? `mode ${id}`
+
 export type CommandRequest = {
   id: number
   promiseSet: PromiseSet<string>
@@ -207,6 +234,24 @@ function App() {
       [WeaponType.Pistol]: 0,
     },
   })
+
+  const internalServersRef = React.useRef<string>(`newgui integrated [
+        guitab "servers"
+        guiservers [
+            guilist [
+                guicheckbox \"auto-sort\" autosortservers
+                if (= $autosortservers 0) [ guibar ; guibutton \"sort\" \"sortservers\" ]
+            ]
+            guibar
+        ] 17
+    ] "" [initservers]
+  `)
+  const [internalServers, _setInternalServers] = React.useState<string>(internalServersRef.current)
+  const setInternalServers = React.useCallback((gui: string) => {
+    if (internalServersRef.current === gui) return
+    internalServersRef.current = gui
+    _setInternalServers(gui)
+  }, [])
 
   React.useEffect(() => {
     Module.gameState = {
@@ -406,6 +451,8 @@ function App() {
         guibutton "reload page.."  [js "window.location.reload()"]
     ]
 
+    ${internalServers}
+
     injectedmenu = [
         guilist [
           guiimage (concatword "packages/icons/" (playermodelicon) ".jpg") [chooseplayermodel] 1.15
@@ -582,10 +629,13 @@ function App() {
       Module.FS_createPath(`/`, 'demo', true, true)
 
       if (BROWSER.isFirefox || BROWSER.isSafari) {
+        // Disable effects for Firefox/Safari due to WebGL performance issues
         BananaBread.execute('skipparticles 1')
         BananaBread.execute('glare 0')
       } else {
+        // Full quality for other browsers
         BananaBread.execute('skipparticles 0')
+        BananaBread.execute('glare 1')
       }
 
       if (!BROWSER.isMobile) {
@@ -855,6 +905,34 @@ function App() {
         const { Cluster, Master } = serverMessage
         const combined = [...(Master || [])]
 
+        // Rebuild the Servers GUI with a Built in tab based on Cluster
+        let gui: Maybe<string> = null
+        try {
+          const builtins = (Cluster || []) as any[]
+          const rows = builtins
+            .map(
+              (s: any) =>
+                `guibutton "${s.Alias} (^f2${s.NumClients} player${s.NumClients === 1 ? '' : 's'}^f7) - ${modeName(s.Mode)} ${s.Map}" "join ${s.Alias}"`
+            )
+            .join("\n")
+
+          // Create a new, separate GUI so we don't mutate the stock "servers" GUI
+          gui = `newgui integrated [
+            ${rows}
+            guitab "servers"
+            guiservers [
+              guilist [
+                guicheckbox \"auto-sort\" autosortservers
+                if (= $autosortservers 0) [ guibar ; guibutton \"sort\" \"sortservers\" ]
+              ]
+              guibar
+            ] 17
+          ] "" [initservers]`
+          setInternalServers(gui)
+        } catch (e) {
+          console.warn('failed to build built-in servers tab', e)
+        }
+
         if (
           BananaBread == null ||
           BananaBread.execute == null ||
@@ -866,62 +944,6 @@ function App() {
 
         // Inject only master into engine list as before
         injectServers(combined)
-
-        // Refresh our separate GUI without stealing focus; do not call showgui here
-
-        // Rebuild the Servers GUI with a Built in tab based on Cluster
-        try {
-          const MODE_NAMES = [
-            'ffa',
-            'coop-edit',
-            'teamplay',
-            'insta',
-            'insta team',
-            'efficiency',
-            'efficiency team',
-            'tactics',
-            'tactics team',
-            'capture',
-            'regen capture',
-            'ctf',
-            'insta ctf',
-            'protect',
-            'insta protect',
-            'hold',
-            'insta hold',
-            'efficiency ctf',
-            'efficiency protect',
-            'efficiency hold',
-            'collect',
-            'insta collect',
-            'efficiency collect',
-          ] as const
-          const modeName = (id: number): string => MODE_NAMES[id] ?? `mode ${id}`
-
-          const builtins = (Cluster || []) as any[]
-          const rows = builtins
-            .map(
-              (s: any) =>
-                `guibutton "${s.Alias} (^f2${s.NumClients} player${s.NumClients === 1 ? '' : 's'}^f7) - ${modeName(s.Mode)} ${s.Map}" "join ${s.Alias}"`
-            )
-            .join("\n")
-
-          // Create a new, separate GUI so we don't mutate the stock "servers" GUI
-          const gui = `newgui integrated [
-            ${rows}
-            guitab "servers"
-            guiservers [
-              guilist [
-                guicheckbox \"auto-sort\" autosortservers
-                if (= $autosortservers 0) [ guibar ; guibutton \"sort\" \"sortservers\" ]
-              ]
-              guibar
-            ] 17
-          ] "" [initservers]`
-          BananaBread.execute(gui)
-        } catch (e) {
-          console.warn('failed to build built-in servers tab', e)
-        }
         return
       }
 
