@@ -2,25 +2,10 @@
 
 set -euo pipefail
 
-CONTAINER_ENGINE=${CONTAINER_ENGINE:-}
-if [ -z "${CONTAINER_ENGINE}" ]; then
-  if command -v docker >/dev/null 2>&1; then
-    CONTAINER_ENGINE=docker
-  elif command -v podman >/dev/null 2>&1; then
-    CONTAINER_ENGINE=podman
-  else
-    echo "Neither docker nor podman found. Please install one or set CONTAINER_ENGINE."
-    exit 1
-  fi
-fi
-
-IMAGE_TAG="sour-emscripten:3.1.8"
-PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
-HOST_UID="$(id -u)"
-HOST_GID="$(id -g)"
+source "$(dirname "$0")/buildenv-vars"
 
 # Build sour binary
-"$CONTAINER_ENGINE" run \
+$CONTAINER_CMD run \
   --rm \
   --user "$HOST_UID:$HOST_GID" \
   --env-file "$PROJECT_ROOT/docker/common.env" \
@@ -30,7 +15,7 @@ HOST_GID="$(id -g)"
   bash -lc 'go build -o /workspace/bin/sour ./cmd/sour'
 
 # Build the serve image
-"$CONTAINER_ENGINE" build -f "$PROJECT_ROOT/docker/serve.Dockerfile" -t sour-game:latest "$PROJECT_ROOT"
+$CONTAINER_CMD build -f "$PROJECT_ROOT/docker/serve.Dockerfile" -t sour-game:latest "$PROJECT_ROOT"
 
 echo "Built image sour-game:latest"
 

@@ -47,6 +47,20 @@ server:
         defaultMap: "dust2"
         maps:
           - "dust2"
+    - name: "ctf"
+      config:
+        defaultMode: "ctf"
+        defaultMap: "dust2"
+        maps:
+          - "dust2"
+    - name: "effic"
+      config:
+        defaultMode: "effic"
+        defaultMap: "dust2"
+        maps:
+          - "dust2"
+          - "complex"
+          - "turbine"
     - name: "explore"
       config:
         matchLength: 180
@@ -54,7 +68,7 @@ server:
   ingress:
     desktop:
       - port: 28785
-        target: lobby
+        target: ffa
         serverInfo:
           enabled: false
 
@@ -71,7 +85,7 @@ server:
   spaces:
     - preset: ffa
       config:
-        alias: lobby
+        alias: ffa
     - preset: insta-dust2
       config:
         alias: insta-dust2
@@ -81,6 +95,12 @@ server:
     - preset: insta
       config:
         alias: insta
+    - preset: ctf
+      config:
+        alias: ctf
+    - preset: effic
+      config:
+        alias: effic
 
 client:
   assets:

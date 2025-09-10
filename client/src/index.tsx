@@ -389,6 +389,15 @@ function App() {
     //       guibutton "log out.." [js "Module.discord.logout()"]
     //   ]
 
+    // Removed menu options for now
+    // 
+    //   ${CONFIG.menuOptions}
+    //   guibutton "join insta-dust2" "join insta-dust2"
+    //   guibutton "join ffa-dust2" "join ffa-dust2"
+    //   guibutton "join insta rotating maps" "join insta"
+    //   guibutton "join ffa rotating maps" "join lobby"
+    //   ${renderDiscordHeader(authState)}
+    //   ${renderDiscordButton(authState)}
 
     const menu = `
     newgui content [
@@ -412,7 +421,6 @@ function App() {
               ]
           ]
       ]
-      ${renderDiscordHeader(authState)}
       guibar
       if (isconnected) [
           if (|| $editing (m_edit (getmode))) [
@@ -424,14 +432,9 @@ function App() {
           guibutton "master.." [showgui master]
           guibutton "disconnect" "disconnect"         "exit"
           guibar
-      ] [
-          ${CONFIG.menuOptions}
-          guibutton "join insta-dust2" "join insta-dust2"
-          guibutton "join ffa-dust2" "join ffa-dust2"
-          guibutton "join insta rotating maps" "join insta"
-          guibutton "join ffa rotating maps" "join lobby"
-          guibutton "create private game..." "creategame ffa"
       ]
+      guibutton "server browser.." "showgui integrated"
+      guibutton "create private game..." "creategame ffa"
       guibutton "random map.."  "map random"
       guibutton "content.." "showgui content"
       if ($fullscreen) [
@@ -439,7 +442,6 @@ function App() {
       ] [
           guibutton "enter fullscreen.." [fullscreen 1]
       ]
-      ${renderDiscordButton(authState)}
       guibutton "options.."        "showgui options"
       guibutton "about.."          "showgui about"
     ]
@@ -505,6 +507,14 @@ function App() {
     }
 
     const injectServers = (servers: any) => {
+      const count = servers?.length ?? 0
+      if (!servers || count === 0) {
+        console.log('[sour] no servers to inject; keeping existing list')
+        return
+      }
+      // Clear previous list entirely to avoid conflicting state
+      BananaBread.execute('clearservers 1')
+      console.log('[sour] injecting servers:', count)
       R.map((server) => {
         const { Host, Port, Info, Length } = server
 
@@ -513,10 +523,17 @@ function App() {
 
         // Copy data to Emscripten heap (directly accessed from Module.HEAPU8)
         const dataHeap = new Uint8Array(Module.HEAPU8.buffer, pointer, Length)
-        dataHeap.set(new Uint8Array(Info.buffer, Info.byteOffset, Length))
+        const source =
+          Info instanceof Uint8Array
+            ? new Uint8Array(Info.buffer, Info.byteOffset, Length)
+            : new Uint8Array(Info, 0, Length)
+        dataHeap.set(source)
 
         // Call function and get result
         BananaBread.injectServer(Host, Port, pointer, Length)
+
+        // Mark injected entries as kept so engine maintenance doesn't remove them
+        BananaBread.execute(`keepserver ${Host} ${Port}`)
 
         // Free memory
         Module._free(pointer)
@@ -596,6 +613,9 @@ function App() {
       setState({
         type: GameStateType.Ready,
       })
+
+      // Re-enable automatic updates (built-in tab is rendered separately)
+      BananaBread.execute('autoupdateservers 1')
 
       if (cachedServers != null) {
         injectServers(cachedServers)
@@ -833,7 +853,7 @@ function App() {
 
       if (serverMessage.Op === MessageType.Info) {
         const { Cluster, Master } = serverMessage
-        const combined = [...(Master || []), ...(Cluster || [])]
+        const combined = [...(Master || [])]
 
         if (
           BananaBread == null ||
@@ -844,7 +864,64 @@ function App() {
           return
         }
 
+        // Inject only master into engine list as before
         injectServers(combined)
+
+        // Refresh our separate GUI without stealing focus; do not call showgui here
+
+        // Rebuild the Servers GUI with a Built in tab based on Cluster
+        try {
+          const MODE_NAMES = [
+            'ffa',
+            'coop-edit',
+            'teamplay',
+            'insta',
+            'insta team',
+            'efficiency',
+            'efficiency team',
+            'tactics',
+            'tactics team',
+            'capture',
+            'regen capture',
+            'ctf',
+            'insta ctf',
+            'protect',
+            'insta protect',
+            'hold',
+            'insta hold',
+            'efficiency ctf',
+            'efficiency protect',
+            'efficiency hold',
+            'collect',
+            'insta collect',
+            'efficiency collect',
+          ] as const
+          const modeName = (id: number): string => MODE_NAMES[id] ?? `mode ${id}`
+
+          const builtins = (Cluster || []) as any[]
+          const rows = builtins
+            .map(
+              (s: any) =>
+                `guibutton "${s.Alias} (^f2${s.NumClients} player${s.NumClients === 1 ? '' : 's'}^f7) - ${modeName(s.Mode)} ${s.Map}" "join ${s.Alias}"`
+            )
+            .join("\n")
+
+          // Create a new, separate GUI so we don't mutate the stock "servers" GUI
+          const gui = `newgui integrated [
+            ${rows}
+            guitab "servers"
+            guiservers [
+              guilist [
+                guicheckbox \"auto-sort\" autosortservers
+                if (= $autosortservers 0) [ guibar ; guibutton \"sort\" \"sortservers\" ]
+              ]
+              guibar
+            ] 17
+          ] "" [initservers]`
+          BananaBread.execute(gui)
+        } catch (e) {
+          console.warn('failed to build built-in servers tab', e)
+        }
         return
       }
 

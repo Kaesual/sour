@@ -2,6 +2,7 @@
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source "$(dirname "$0")/buildenv-vars"
 
 ALLOWED_STEPS=("assets" "game" "proxy" "web" "server" "image")
 
@@ -30,22 +31,8 @@ else
   echo "Building steps: $* ..."
 fi
 
-CONTAINER_ENGINE=${CONTAINER_ENGINE:-}
-if [ -z "${CONTAINER_ENGINE}" ]; then
-  if command -v docker >/dev/null 2>&1; then
-    CONTAINER_ENGINE=docker
-  elif command -v podman >/dev/null 2>&1; then
-    CONTAINER_ENGINE=podman
-  else
-    echo "Neither docker nor podman found. Please install one or set CONTAINER_ENGINE."
-    exit 1
-  fi
-fi
-
-IMAGE_TAG="sour-emscripten:3.1.8"
-
 # build image if it doesn't exist
-if ! "$CONTAINER_ENGINE" image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
+if ! $CONTAINER_CMD image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
   ./scripts/build-builder-image
 else
   echo "Image $IMAGE_TAG already exists. Skipping build."

@@ -2,22 +2,8 @@
 
 set -euo pipefail
 
-CONTAINER_ENGINE=${CONTAINER_ENGINE:-}
-if [ -z "${CONTAINER_ENGINE}" ]; then
-  if command -v docker >/dev/null 2>&1; then
-    CONTAINER_ENGINE=docker
-  elif command -v podman >/dev/null 2>&1; then
-    CONTAINER_ENGINE=podman
-  else
-    echo "Neither docker nor podman found. Please install one or set CONTAINER_ENGINE."
-    exit 1
-  fi
-fi
+source "$(dirname "$0")/buildenv-vars"
 
-PROJECT_ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
-
-HOST_UID="$(id -u)"
-HOST_GID="$(id -g)"
 WEB_ADDR=${WEB_ADDR:-0.0.0.0}
 WEB_PORT=${WEB_PORT:-1337}
 
@@ -26,13 +12,13 @@ CONFIG_FILE=${1:-}
 
 handle_signal() {
   echo "SIGINT received, stopping container..."
-  "$CONTAINER_ENGINE" stop sour-game
+  $CONTAINER_CMD stop sour-game
   exit 0
 }
 trap handle_signal SIGINT
 trap handle_signal SIGTERM
 
-"$CONTAINER_ENGINE" run \
+$CONTAINER_CMD run \
   --rm \
   --init \
   --name sour-game \

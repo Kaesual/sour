@@ -176,7 +176,7 @@ func serveCommand(configs []string) error {
 	}
 
 	newConnections := make(chan ingress.Connection)
-	wsIngress := ingress.NewWSIngress(newConnections)
+	wsIngress := ingress.NewWSIngress(newConnections, cluster)
 	enet := make([]*ingress.ENetIngress, 0)
 	infoServices := make([]*servers.ServerInfoService, 0)
 	cluster.StartServers(ctx)
