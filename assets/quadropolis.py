@@ -359,7 +359,8 @@ if __name__ == "__main__":
 
     quaddir = 'quadropolis'
 
-    quad_root = "https://static.sourga.me/quadropolis/4412/.index.source"
+    # Use local quadropolis directory for building
+    quad_root = quaddir
     roots = [
         "sour",
         "https://static.sourga.me/blobs/6481/.index.source",
@@ -375,7 +376,7 @@ if __name__ == "__main__":
         build_desktop=False,
     )
 
-    nodes = json.loads(open('nodes.json', 'r').read())
+    nodes = json.loads(open('quadropolis/nodes.json', 'r').read())
 
     failures = open('failures.txt', 'w', buffering=1)
 
