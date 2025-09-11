@@ -359,8 +359,8 @@ if __name__ == "__main__":
 
     quaddir = 'quadropolis'
 
-    # Use local quadropolis directory for building
-    quad_root = quaddir
+    # Use remote quadropolis asset source - the local db/ files are raw data, not a proper asset source
+    quad_root = "https://static.sourga.me/quadropolis/4412/.index.source"
     roots = [
         "sour",
         "https://static.sourga.me/blobs/6481/.index.source",

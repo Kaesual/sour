@@ -2,7 +2,8 @@
 server:
   cacheDirectory: "./.cache/assets"
   assets:
-    - "fs:assets/dist/.index.source"
+    - "fs:assets/output/.index.source"
+    - "fs:assets/quadropolis/602e8bd8.index.source"
   presets:
     - name: "ffa-duel"
       virtual: true
