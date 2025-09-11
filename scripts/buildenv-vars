@@ -17,7 +17,7 @@ ASSET_OUTPUT_DIR=${ASSET_OUTPUT_DIR:-output}
 # Space-separated maps to build; use 'none' to skip maps
 ASSET_MAPS=${ASSET_MAPS:-"complex dust2 turbine"}
 # Quadropolis assets output directory (defaults to subdirectory of ASSET_OUTPUT_DIR)
-QUADROPOLIS_OUTPUT_DIR=${QUADROPOLIS_OUTPUT_DIR:-"$ASSET_OUTPUT_DIR/quadropolis"}
+QUADROPOLIS_OUTPUT_DIR=${QUADROPOLIS_OUTPUT_DIR:-"$ASSET_OUTPUT_DIR/quad"}
 
 # Cache for emscripten
 EM_CACHE_DIR="$PROJECT_ROOT/.emscripten-cache"

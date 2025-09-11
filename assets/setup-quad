@@ -6,8 +6,10 @@ sauer_archive="06-01-23-quadropolis.tar.gz"
 
 mkdir -p quadropolis
 
-if ! [ -f "quadropolis/nodes.json" ]; then
-  wget "https://static.sourga.me/archives/$sauer_archive"
-  tar xvf "$sauer_archive" -C "quadropolis" 
+if ! [ -f "downloads/$sauer_archive" ]; then
+  wget "https://static.sourga.me/archives/$sauer_archive" -O "downloads/$sauer_archive"
 fi
 
+if ! [ -f "quadropolis/nodes.json" ]; then
+  tar xvf "$sauer_archive" -C "quadropolis"
+fi

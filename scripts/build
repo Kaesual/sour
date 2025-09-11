@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source "$(dirname "$0")/buildenv-vars"
 
-ALLOWED_STEPS=("assets" "game" "proxy" "web" "server" "image")
+ALLOWED_STEPS=("assets" "game" "proxy" "web" "server" "image" "quadropolis")
 
 if [ "$#" -eq 0 ]; then
   echo "Running the script with no parameters will run all build steps (and that's fine)."
@@ -40,6 +40,10 @@ fi
 
 if [[ " $* " == *" assets "* || "$#" -eq 0 ]]; then
   ./scripts/build-assets
+fi
+
+if [[ " $* " == *" quadropolis "* || "$#" -eq 0 ]]; then
+  ./scripts/build-quadropolis
 fi
 
 if [[ " $* " == *" game "* || "$#" -eq 0 ]]; then

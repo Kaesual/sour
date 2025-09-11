@@ -11,8 +11,6 @@ RUN apt-get update && apt-get install -y \
 # Expect caller to have run build-web, build-game, build-assets, build-quadropolis, build-proxy
 COPY assets/output /workspace/assets/output
 RUN ln -s /workspace/assets/output/.index.source /workspace/assets/.index.source
-# Make quadropolis assets discoverable as a separate asset source
-RUN ln -s /workspace/assets/output/quadropolis /workspace/assets/quadropolis
 
 COPY pkg/server/static/site /workspace/pkg/server/static/site
 COPY bin/sour /workspace/bin/sour

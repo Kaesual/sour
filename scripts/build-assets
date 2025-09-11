@@ -22,8 +22,8 @@ $CONTAINER_CMD run \
     mkdir -p "$ASSET_CACHE_DIR"
     ./setup
     # OPTIONAL: Rebuild sourdump to ensure latest code is used
-    # rm -f sourdump
-    # go build -o sourdump ../cmd/sourdump/main.go
+    rm -f sourdump
+    go build -o sourdump ../cmd/sourdump/main.go
     # Build base assets; configure maps via ASSET_MAPS
     # Expand ASSET_MAPS into positional args
     set -- $ASSET_MAPS
@@ -31,7 +31,7 @@ $CONTAINER_CMD run \
       --root https://static.sourga.me/blobs/6481/.index.source \
       --models \
       --download \
-      --outdir dist \
+      --outdir output \
       "$@"
   '
 

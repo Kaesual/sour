@@ -376,7 +376,7 @@ if __name__ == "__main__":
         build_desktop=False,
     )
 
-    nodes = json.loads(open('quadropolis/nodes.json', 'r').read())
+    nodes = json.loads(open(path.join(quaddir, 'nodes.json'), 'r').read())
 
     failures = open('failures.txt', 'w', buffering=1)
 
